@@ -1,5 +1,7 @@
 # Rust Shortlink
 
+![workflow](https://github.com/sugidaffection/rust-shortlink/actions/workflows/rust.yml/badge.svg)
+
 ## Table of Contents
 
 - [About](#about)
