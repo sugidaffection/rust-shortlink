@@ -48,6 +48,7 @@ pub async fn handle_register(
     session: Session,
 ) -> impl Responder {
     let data = data.into_inner();
+    let form = form.into_inner();
     let mut ctx = Context::new();
     ctx.insert("title", "Shortlink | Register");
     let render = data.tera.render("register.html", &ctx).unwrap();

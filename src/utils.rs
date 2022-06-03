@@ -21,6 +21,7 @@ pub fn redirect_to(location: &'static str) -> HttpResponse {
 pub struct LoginForm {
     pub email: String,
     pub password: Secret<String>,
+    pub remember: bool,
 }
 
 #[derive(Deserialize)]
