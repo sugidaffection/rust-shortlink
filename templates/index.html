@@ -1,0 +1,9 @@
+{% extends "components/_base.html" %}
+
+{% block content %}
+
+<h1>Hello World</h1>
+{% if user %}
+user_session : {{user}}
+{% endif %}
+{% endblock content %}
