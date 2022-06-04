@@ -5,15 +5,23 @@ edition = "2021"
 authors = ["Sugi <sugidaffection@gmail.com>"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+[[bin]]
+name = "shortlink"
+path = "src/main.rs"
+
+[lib]
+name = "shortlink"
+path = "src/lib.rs"
 
 [dependencies]
 actix-web = "4.0.1"
 actix-session = { version = "0.6.2", features=["cookie-session"] }
 serde = { version = "1.0.137", features=["derive"]}
-diesel = { version = "1.4.8", features=["postgres", "chrono", "uuid"] }
+diesel = { version = "1.4.8", features=["postgres", "chrono", "uuidv07", "r2d2"] }
+diesel_migrations = "1.4.0"
 dotenv = "0.15.0"
 chrono = { version = "0.4.19", features=["serde"]}
-uuid = { version = "1.1.1", features=["serde", "v4"]}
+uuid = { version = "0.8.0", features=["serde", "v4"]}
 tera = "1.15.0"
 secrecy = { version = "0.8.0", features=["serde"]}
 

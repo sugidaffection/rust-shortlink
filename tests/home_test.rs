@@ -1,21 +1,21 @@
 #[cfg(test)]
-mod tests {
+mod home_tests {
 
     use actix_web::{test, web, App};
+    use dotenv::dotenv;
     use shortlink::routes::home::index;
-    use shortlink::utils::AppData;
-    use tera::Tera;
+    use shortlink::AppData;
 
     use ::lazy_static::lazy_static;
 
     lazy_static! {
-        static ref APP_DATA: AppData = AppData {
-            tera: Tera::new("templates/**/*").unwrap()
-        };
+        static ref APP_DATA: AppData = AppData::new();
     }
 
     #[actix_web::test]
     async fn test_index_get() {
+        dotenv().ok();
+
         let app = App::new()
             .app_data(web::Data::new(APP_DATA.clone()))
             .service(index);

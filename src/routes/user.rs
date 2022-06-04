@@ -1,4 +1,4 @@
-use crate::utils::{redirect_to, AppData};
+use crate::{redirect_to, AppData};
 use actix_session::Session;
 use actix_web::{get, web, HttpResponse, Responder};
 use tera::Context;

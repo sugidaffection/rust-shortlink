@@ -1,4 +1,4 @@
-use crate::utils::AppData;
+use crate::AppData;
 use actix_session::Session;
 use actix_web::{get, web, HttpResponse, Responder};
 use tera::Context;

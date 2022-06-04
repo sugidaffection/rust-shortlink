@@ -1,4 +1,5 @@
-use crate::utils::{redirect_to, AppData, LoginForm, RegisterForm};
+use crate::forms::{LoginForm, RegisterForm};
+use crate::{redirect_to, AppData};
 use actix_session::Session;
 use actix_web::{get, post, web, HttpResponse, Responder};
 use tera::Context;
