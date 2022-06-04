@@ -35,10 +35,7 @@ jobs:
           ~/.cargo/git/db/
           target/
         key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
-    - name: ENV
-      run: echo "$DATABASE_URL"
     - name: Build
-      if: steps.cache.outputs.cache-hit != 'true'
-      run: cargo build --verbose
+      run: ./build.sh
     - name: Run tests
       run: cargo test --verbose
