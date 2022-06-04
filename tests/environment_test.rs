@@ -15,7 +15,11 @@ mod environment_tests {
     fn test_secret_key_must_be_atleast_32_bytes() {
         dotenv::dotenv().ok();
         let secret_key = env::var("SECRET_KEY").unwrap();
-        assert!(secret_key.len() >= 32);
+        assert!(
+            secret_key.len() >= 32,
+            "secret_key bytes {}",
+            secret_key.len()
+        );
     }
 
     #[test]
