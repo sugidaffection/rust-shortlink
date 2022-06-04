@@ -20,15 +20,24 @@ These instructions will get you a copy of the project up and running on your loc
 What things you need to install the software and how to install them.
 
 ```
-rust v2021
+postgresql ^=14
+rust ^=1.58
 ```
 
 ### Installing
 
-After clone this repo:
-
-
+type this command in terminal:
 ```
-cargo run
+./build.sh
 ```
 
+### Run Server
+First thing to do is: 
+```
+setup .env file
+```
+
+then type this command in terminal:
+```
+cargo run --release
+```

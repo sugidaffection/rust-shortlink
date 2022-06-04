@@ -5,8 +5,7 @@ extern crate diesel;
 
 use actix_web::http::header;
 use actix_web::HttpResponse;
-use diesel::{prelude::*, r2d2, PgConnection};
-use dotenv::dotenv;
+use diesel::{r2d2, PgConnection};
 use std::env;
 use tera::Tera;
 
