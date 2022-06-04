@@ -26,7 +26,7 @@ async fn main() -> std::io::Result<()> {
             .configure(user::routes_config)
             .configure(auth::routes_config)
     })
-    .bind(("127.0.0.1", 8080))?
+    .bind(("0.0.0.0", 8080))?
     .run()
     .await
 }
