@@ -31,8 +31,7 @@ async fn main() -> std::io::Result<()> {
                 storage::CookieSessionStore::default(),
                 key.clone(),
             ))
-            .service(home::index)
-            .service(home::redirect)
+            .configure(home::routes_config)
             .configure(user::routes_config)
             .configure(auth::routes_config)
     })

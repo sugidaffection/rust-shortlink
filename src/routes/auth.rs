@@ -1,9 +1,12 @@
 use crate::forms::{LoginForm, RegisterForm};
-use crate::{redirect_to, AppData};
+use crate::models::RegisterUser;
+use crate::{
+    auth_handlers::{login_user, register_user},
+    redirect_to, AppData,
+};
 use actix_session::Session;
 use actix_web::{get, post, web, HttpResponse, Responder};
 use tera::Context;
-use uuid::Uuid;
 
 #[get("/login")]
 pub async fn login(data: web::Data<AppData>) -> impl Responder {
@@ -22,13 +25,14 @@ pub async fn handle_login(
 ) -> impl Responder {
     let data = data.into_inner();
     let form = form.into_inner();
-    if !form.email.is_empty() {
-        session.insert("user_session", Uuid::new_v4()).unwrap();
+    let pool = data.pool.clone();
+    if let Some(user) = login_user(pool, form.into()) {
+        session.insert("user_session", user.email).unwrap();
         return redirect_to("/");
     }
-
     let mut ctx = Context::new();
     ctx.insert("title", "Shortlink | Sign In");
+    ctx.insert("error", "Wrong username or password");
     let render = data.tera.render("login.html", &ctx).unwrap();
     HttpResponse::Ok().body(render)
 }
@@ -50,8 +54,14 @@ pub async fn handle_register(
 ) -> impl Responder {
     let data = data.into_inner();
     let form = form.into_inner();
+    let pool = data.pool.clone();
+    if let Some(user) = register_user(pool, RegisterUser::from(form)) {
+        session.insert("user_session", user.email).unwrap();
+        return redirect_to("/");
+    }
     let mut ctx = Context::new();
     ctx.insert("title", "Shortlink | Register");
+    ctx.insert("error", "Failed to create user");
     let render = data.tera.render("register.html", &ctx).unwrap();
     HttpResponse::Ok().body(render)
 }

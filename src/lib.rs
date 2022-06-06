@@ -3,9 +3,14 @@
 #[macro_use]
 extern crate diesel;
 
+#[macro_use]
+extern crate secrecy;
+
 use actix_web::http::header;
 use actix_web::HttpResponse;
+use bcrypt::{hash, verify};
 use diesel::{r2d2, PgConnection};
+use secrecy::{ExposeSecret, Secret};
 use std::env;
 use tera::Tera;
 
@@ -56,4 +61,45 @@ pub fn redirect_to(location: &'static str) -> HttpResponse {
     HttpResponse::Found()
         .append_header((header::LOCATION, location))
         .finish()
+}
+
+pub fn b62encode(mut n: usize) -> Option<String> {
+    let base = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    let base_length = base.len();
+    let mut result = String::new();
+    while n > 0 {
+        result.insert(0, base.chars().nth(n % base_length).unwrap());
+        n /= base_length;
+    }
+
+    return Some(result);
+}
+
+pub fn b62decode(string: String) -> Option<usize> {
+    let base = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    let base_length = base.len();
+
+    let mut result: usize = 0;
+    for (i, c) in string.chars().enumerate() {
+        let pos = base.chars().position(|x| x == c);
+        if let None = pos {
+            return None;
+        };
+        let n = string.len() - (i + 1);
+        result += pos.unwrap() * base_length.pow(n as u32);
+    }
+
+    return Some(result);
+}
+
+pub fn hash_password(password: Secret<String>) -> Option<String> {
+    hash(password.expose_secret(), 12).ok()
+}
+
+pub fn verify_password(password: Secret<String>, hash: Secret<String>) -> Option<bool> {
+    verify(
+        password.expose_secret().to_owned(),
+        hash.expose_secret().as_str(),
+    )
+    .ok()
 }

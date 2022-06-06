@@ -1,5 +1,9 @@
+use crate::{hash_password, RegisterForm};
+
 use super::schema::{short_link, users};
 use chrono::NaiveDateTime;
+
+use secrecy::{Secret, SerializableSecret};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
@@ -14,8 +18,7 @@ pub struct ShortLink {
     pub is_private: bool,
 }
 
-#[derive(Insertable, Queryable, Serialize, Deserialize, Debug)]
-#[table_name = "users"]
+#[derive(Queryable, Serialize, Deserialize, Debug)]
 pub struct User {
     pub id: Uuid,
     pub username: String,
@@ -27,4 +30,28 @@ pub struct User {
 #[derive(Debug, Serialize, Deserialize)]
 pub struct AuthUser {
     pub email: String,
+}
+
+#[derive(Clone, Debug, Deserialize)]
+pub struct LoginUser {
+    pub email: String,
+    pub password: Secret<String>,
+}
+
+#[derive(Debug, Insertable, Serialize, Deserialize)]
+#[table_name = "users"]
+pub struct RegisterUser {
+    pub username: String,
+    pub email: String,
+    pub password_hash: String,
+}
+
+impl RegisterUser {
+    pub fn from(form: RegisterForm) -> Self {
+        RegisterUser {
+            username: form.username,
+            email: form.email,
+            password_hash: hash_password(form.password).expect("Failed to hash password"),
+        }
+    }
 }

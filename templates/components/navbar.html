@@ -15,8 +15,10 @@
                 </li>
             </ul>
             {% if user %}
-            <a class="btn btn-primary" href="/user/profile">Profile</a>
-            <a class="btn btn-outline-secondary" href="/auth/logout">Logout</a>
+            <div class="d-flex gap-2">
+                <a class="btn btn-primary" href="/user/profile">Profile</a>
+                <a class="btn btn-outline-secondary" href="/auth/logout">Logout</a>
+            </div>
             {% else %}
             <a class="btn btn-primary" href="/auth/login">Login</a>
             {% endif %}

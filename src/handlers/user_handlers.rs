@@ -1,4 +1,3 @@
-use crate::forms::RegisterForm;
-use actix_web::web;
+use crate::Pool;
 
-pub fn register_user(form: web::Form<RegisterForm>) {}
+pub fn get_user(pool: Pool, email: String) {}

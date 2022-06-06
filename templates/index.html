@@ -4,6 +4,14 @@
 
 <h1>Hello World</h1>
 {% if user %}
-user_session : {{user}}
+<form method="post" class="px-2 py-3 d-flex">
+    <div class="me-2">
+        <input name="url" type="url" class="form-control" placeholder="Enter your long URL" required>
+    </div>
+    <button type="submit" class="btn btn-primary btn-sm">Generate URL</button>
+</form>
+{% else %}
+Please login first
+<a href="/auth/login" class="btn btn-primary">Login</a>
 {% endif %}
 {% endblock content %}

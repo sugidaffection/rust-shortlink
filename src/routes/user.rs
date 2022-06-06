@@ -9,7 +9,7 @@ async fn profile(data: web::Data<AppData>, session: Session) -> impl Responder {
     let data = data.into_inner();
     let mut ctx = Context::new();
     ctx.insert("title", "Shortlink");
-    if let Some(user_session) = session.get::<Uuid>("user_session").unwrap() {
+    if let Some(user_session) = session.get::<String>("user_session").unwrap() {
         ctx.insert("user", &user_session);
         let render = data.tera.render("profile.html", &ctx).unwrap();
         return HttpResponse::Ok().body(render);
@@ -23,7 +23,7 @@ async fn settings(data: web::Data<AppData>, session: Session) -> impl Responder 
     let data = data.into_inner();
     let mut ctx = Context::new();
     ctx.insert("title", "Shortlink");
-    if let Some(user_session) = session.get::<Uuid>("user_session").unwrap() {
+    if let Some(user_session) = session.get::<String>("user_session").unwrap() {
         ctx.insert("user", &user_session);
         let render = data.tera.render("profile.html", &ctx).unwrap();
         return HttpResponse::Ok().body(render);
