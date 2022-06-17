@@ -1,7 +1,6 @@
-use crate::{b62encode, redirect_to, AppData, LongURLForm};
+use crate::{redirect_to, shortlink_handler, AppData, LongURLForm};
 use actix_session::Session;
 use actix_web::{get, post, web, HttpResponse, Responder};
-use chrono;
 use tera::Context;
 
 #[get("/")]
@@ -29,8 +28,7 @@ async fn generate_shortlink(
     if let Some(user_session) = session.get::<String>("user_session").unwrap() {
         ctx.insert("user", &user_session);
         let short_code =
-            b62encode(form.url.len() + (chrono::offset::Local::now().timestamp() as usize))
-                .unwrap();
+            shortlink_handler::create_short_link(data.pool.clone(), form, user_session).unwrap();
         ctx.insert("code", short_code.as_str());
         let render = data.tera.render("generate.html", &ctx).unwrap();
         return HttpResponse::Ok().body(render);
@@ -52,8 +50,12 @@ async fn redirect(
     if let Some(user_session) = session.get::<String>("user_session").unwrap() {
         ctx.insert("user", &user_session);
     }
-    let render = data.tera.render("index.html", &ctx).unwrap();
-    HttpResponse::Ok().body(render)
+    let long_url = shortlink_handler::get_short_link(data.pool.clone(), path);
+    if let Some(url) = long_url {
+        return redirect_to(url.as_str());
+    }
+
+    redirect_to("/")
 }
 
 pub fn routes_config(cfg: &mut web::ServiceConfig) {

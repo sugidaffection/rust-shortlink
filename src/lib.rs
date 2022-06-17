@@ -11,6 +11,7 @@ use actix_web::HttpResponse;
 use bcrypt::{hash, verify};
 use diesel::{r2d2, PgConnection};
 use secrecy::{ExposeSecret, Secret};
+use serde::de;
 use std::env;
 use tera::Tera;
 
@@ -57,7 +58,7 @@ pub fn create_pool(database_url: Option<String>) -> Pool {
         .expect("Failed to create pool.")
 }
 
-pub fn redirect_to(location: &'static str) -> HttpResponse {
+pub fn redirect_to(location: &str) -> HttpResponse {
     HttpResponse::Found()
         .append_header((header::LOCATION, location))
         .finish()
@@ -102,4 +103,16 @@ pub fn verify_password(password: Secret<String>, hash: Secret<String>) -> Option
         hash.expose_secret().as_str(),
     )
     .ok()
+}
+
+fn deserialize_bool<'de, D>(deserializer: D) -> Result<Option<bool>, D::Error>
+where
+    D: de::Deserializer<'de>,
+{
+    if let Ok(s) = de::Deserialize::deserialize(deserializer) {
+        return Ok(Some(
+            ["on", "yes", "true", "1", "checked", "y"].contains(&s),
+        ));
+    }
+    Ok(None)
 }

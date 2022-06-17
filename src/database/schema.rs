@@ -6,6 +6,7 @@ table! {
         long_url -> Varchar,
         is_private -> Nullable<Bool>,
         created_at -> Timestamp,
+        uid -> Int4,
     }
 }
 

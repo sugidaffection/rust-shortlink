@@ -3,7 +3,7 @@ use crate::{hash_password, RegisterForm};
 use super::schema::{short_link, users};
 use chrono::NaiveDateTime;
 
-use secrecy::{Secret, SerializableSecret};
+use secrecy::Secret;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
@@ -11,11 +11,12 @@ use uuid::Uuid;
 #[table_name = "short_link"]
 pub struct ShortLink {
     pub id: Uuid,
+    pub owner_id: Uuid,
     pub hash: String,
     pub long_url: String,
+    pub is_private: Option<bool>,
     pub created_at: NaiveDateTime,
-    pub owner_id: Uuid,
-    pub is_private: bool,
+    pub uid: i32,
 }
 
 #[derive(Queryable, Serialize, Deserialize, Debug)]
@@ -54,4 +55,12 @@ impl RegisterUser {
             password_hash: hash_password(form.password).expect("Failed to hash password"),
         }
     }
+}
+
+#[derive(Debug, Insertable, Serialize, Deserialize)]
+#[table_name = "short_link"]
+pub struct NewShortLink {
+    pub long_url: String,
+    pub owner_id: Uuid,
+    pub hash: String,
 }

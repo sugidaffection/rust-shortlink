@@ -1,7 +1,7 @@
-use secrecy::Secret;
-use serde::{de, Deserialize};
-
+use crate::deserialize_bool;
 use crate::models::LoginUser;
+use secrecy::Secret;
+use serde::Deserialize;
 
 #[derive(Clone, Deserialize)]
 pub struct LoginForm {
@@ -18,18 +18,6 @@ impl Into<LoginUser> for LoginForm {
             password: self.password,
         }
     }
-}
-
-fn deserialize_bool<'de, D>(deserializer: D) -> Result<Option<bool>, D::Error>
-where
-    D: de::Deserializer<'de>,
-{
-    if let Ok(s) = de::Deserialize::deserialize(deserializer) {
-        return Ok(Some(
-            ["on", "yes", "true", "1", "checked", "y"].contains(&s),
-        ));
-    }
-    Ok(None)
 }
 
 #[derive(Clone, Deserialize)]
