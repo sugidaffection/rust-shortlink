@@ -4,7 +4,7 @@
 
 |![screenshot](screenshots/screenshot1.png?)|
 |-|
-|![screenshot](screenshots/screenshot2.png?)|
+|![screenshot](screenshots/screenshot2.png?1)|
 
 ## Table of Contents
 
