@@ -1,12 +1,13 @@
-use crate::forms::{LoginForm, RegisterForm};
-use crate::models::RegisterUser;
-use crate::{
-    auth_handlers::{login_user, register_user},
-    redirect_to, AppData,
-};
 use actix_session::Session;
 use actix_web::{get, post, web, HttpResponse, Responder};
 use tera::Context;
+
+use crate::{
+    forms::{LoginForm, RegisterForm},
+    redirect_to,
+    services::auth::AuthService,
+    AppData,
+};
 
 #[get("/login")]
 pub async fn login(data: web::Data<AppData>) -> impl Responder {
@@ -26,7 +27,9 @@ pub async fn handle_login(
     let data = data.into_inner();
     let form = form.into_inner();
     let pool = data.pool.clone();
-    if let Some(user) = login_user(pool, form.into()) {
+    let conn = &pool.get().ok().expect("Pool Connection doesnt exists");
+
+    if let Some(user) = AuthService::login(conn, form).ok() {
         session.insert("user_session", user.email).unwrap();
         return redirect_to("/");
     }
@@ -55,7 +58,9 @@ pub async fn handle_register(
     let data = data.into_inner();
     let form = form.into_inner();
     let pool = data.pool.clone();
-    if let Some(user) = register_user(pool, RegisterUser::from(form)) {
+    let conn = &pool.get().ok().expect("Pool Connection doesnt exists");
+
+    if let Some(user) = AuthService::register(conn, form).ok() {
         session.insert("user_session", user.email).unwrap();
         return redirect_to("/");
     }
@@ -70,15 +75,4 @@ pub async fn handle_register(
 pub async fn logout(session: Session) -> impl Responder {
     session.remove("user_session");
     redirect_to("/auth/login")
-}
-
-pub fn routes_config(cfg: &mut web::ServiceConfig) {
-    cfg.service(
-        web::scope("/auth")
-            .service(login)
-            .service(handle_login)
-            .service(register)
-            .service(handle_register)
-            .service(logout),
-    );
 }

@@ -1,15 +1,19 @@
-use crate::{redirect_to, shortlink_handler, AppData, LongURLForm};
+use crate::models::LongURL;
+use crate::services::short_link::ShortLinkService;
+use crate::{redirect_to, AppData};
 use actix_session::Session;
-use actix_web::{get, post, web, HttpResponse, Responder};
+use actix_web::{get, post, web, HttpRequest, HttpResponse, Responder};
 use tera::Context;
 
 #[get("/")]
-async fn index(data: web::Data<AppData>, session: Session) -> impl Responder {
+async fn index(data: web::Data<AppData>, session: Session, req: HttpRequest) -> impl Responder {
     let data = data.into_inner();
     let mut ctx = Context::new();
     ctx.insert("title", "Shortlink");
     if let Some(user_session) = session.get::<String>("user_session").unwrap() {
         ctx.insert("user", &user_session);
+        let url = req.url_for("index", &["/"]).ok().unwrap().to_string();
+        ctx.insert("url", url.as_str());
     }
     let render = data.tera.render("index.html", &ctx).unwrap();
     HttpResponse::Ok().body(render)
@@ -18,7 +22,8 @@ async fn index(data: web::Data<AppData>, session: Session) -> impl Responder {
 #[post("/")]
 async fn generate_shortlink(
     data: web::Data<AppData>,
-    form: web::Form<LongURLForm>,
+    form: web::Form<LongURL>,
+    req: HttpRequest,
     session: Session,
 ) -> impl Responder {
     let data = data.into_inner();
@@ -27,10 +32,13 @@ async fn generate_shortlink(
     ctx.insert("title", "Shortlink");
     if let Some(user_session) = session.get::<String>("user_session").unwrap() {
         ctx.insert("user", &user_session);
-        let short_code =
-            shortlink_handler::create_short_link(data.pool.clone(), form, user_session).unwrap();
+        let pool = data.pool.clone();
+        let conn = &pool.get().ok().expect("Pool Connection doesnt exists");
+        let short_code = ShortLinkService::create(conn, form, user_session).unwrap();
+        let url = req.url_for("index", &["/"]).ok().expect("Cant get url");
+        ctx.insert("url", url.as_str());
         ctx.insert("code", short_code.as_str());
-        let render = data.tera.render("generate.html", &ctx).unwrap();
+        let render = data.tera.render("index.html", &ctx).unwrap();
         return HttpResponse::Ok().body(render);
     }
 
@@ -50,17 +58,12 @@ async fn redirect(
     if let Some(user_session) = session.get::<String>("user_session").unwrap() {
         ctx.insert("user", &user_session);
     }
-    let long_url = shortlink_handler::get_short_link(data.pool.clone(), path);
+    let pool = data.pool.clone();
+    let conn = &pool.get().ok().expect("Pool Connection doesnt exists");
+    let long_url = ShortLinkService::get(conn, path);
     if let Some(url) = long_url {
         return redirect_to(url.as_str());
     }
 
     redirect_to("/")
-}
-
-pub fn routes_config(cfg: &mut web::ServiceConfig) {
-    cfg.service(index)
-        .service(index)
-        .service(generate_shortlink)
-        .service(redirect);
 }

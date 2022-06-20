@@ -3,7 +3,7 @@ mod home_tests {
 
     use actix_web::{test, web, App};
     use dotenv::dotenv;
-    use shortlink::routes::home::index;
+    use shortlink::home::handlers::index;
     use shortlink::AppData;
 
     use ::lazy_static::lazy_static;

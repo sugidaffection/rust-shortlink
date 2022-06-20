@@ -1,3 +1,3 @@
 pub mod auth;
-pub mod home;
+pub mod short_link;
 pub mod user;

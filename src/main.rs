@@ -2,7 +2,7 @@ use actix_session::{storage, SessionMiddleware};
 use actix_web::{cookie, middleware, web, App, HttpServer};
 
 use dotenv::dotenv;
-use shortlink::{auth, create_pool, home, user, AppData};
+use shortlink::{auth, create_pool, home, users, AppData};
 use std::env;
 
 #[macro_use]
@@ -31,9 +31,9 @@ async fn main() -> std::io::Result<()> {
                 storage::CookieSessionStore::default(),
                 key.clone(),
             ))
-            .configure(home::routes_config)
-            .configure(user::routes_config)
-            .configure(auth::routes_config)
+            .configure(home::routes::routes_config)
+            .configure(users::routes::routes_config)
+            .configure(auth::routes::routes_config)
     })
     .bind(("0.0.0.0", 8080))?
     .run()

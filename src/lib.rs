@@ -15,14 +15,18 @@ use serde::de;
 use std::env;
 use tera::Tera;
 
-pub mod database;
-pub mod forms;
-pub mod handlers;
-pub mod routes;
+pub mod auth;
+pub mod home;
+pub mod users;
 
-pub use {database::*, forms::*, handlers::*, routes::*};
+pub mod database;
+pub mod errors;
+pub mod forms;
+pub mod models;
+pub mod services;
 
 pub type Pool = r2d2::Pool<r2d2::ConnectionManager<PgConnection>>;
+pub type PConn = r2d2::PooledConnection<r2d2::ConnectionManager<PgConnection>>;
 
 #[derive(Clone)]
 pub struct AppData {
