@@ -2,9 +2,9 @@
 
 ![workflow](https://github.com/sugidaffection/rust-shortlink/actions/workflows/rust.yml/badge.svg)
 
-|![screenshot](screenshots/screenshot1.png?)|
+|![screenshot](screenshots/screenshot1.png)|
 |-|
-|![screenshot](screenshots/screenshot2.png?1)|
+|![screenshot](screenshots/screenshot2.png)|
 
 ## Table of Contents
 
