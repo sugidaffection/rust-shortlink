@@ -29,7 +29,7 @@ impl User {
     }
 }
 
-#[derive(Debug, Insertable, Deserialize)]
+#[derive(Debug, Insertable, Deserialize, Clone)]
 #[table_name = "users"]
 pub struct NewUser {
     pub username: String,

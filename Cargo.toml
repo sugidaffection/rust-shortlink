@@ -28,3 +28,4 @@ bcrypt = "0.13.0"
 
 [dev-dependencies]
 lazy_static = "1.4.0"
+serial_test = "0.7.0"
