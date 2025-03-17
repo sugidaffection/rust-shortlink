@@ -14,18 +14,24 @@ name = "shortlink"
 path = "src/lib.rs"
 
 [dependencies]
-actix-web = "4.0.1"
-actix-session = { version = "0.6.2", features=["cookie-session"] }
-serde = { version = "1.0.137", features=["derive"]}
-diesel = { version = "1.4.8", features=["postgres", "chrono", "uuidv07", "r2d2"] }
-diesel_migrations = "1.4.0"
-dotenv = "0.15.0"
-chrono = { version = "0.4.19", features=["serde"]}
-uuid = { version = "0.8.0", features=["serde", "v4"]}
-tera = "1.15.0"
-secrecy = { version = "0.8.0", features=["serde"]}
-bcrypt = "0.13.0"
+actix-web = "4.10.2"
+actix-session = { version = "0.10.1", features = ["cookie-session"] }
+serde = { version = "1.0", features = ["derive"] }
+diesel = { version = "2.2.8", features = [
+    "postgres",
+    "chrono",
+    "uuid",
+    "r2d2",
+] }
+diesel_migrations = "2.2.0"
+chrono = { version = "0.4.40", features = ["serde"] }
+uuid = { version = "1.16.0", features = ["serde", "v4"] }
+tera = "1.20.0"
+secrecy = { version = "0.10.3", features = ["serde"] }
+bcrypt = "0.17.0"
+thiserror = "2.0.12"
+dotenvy = "0.15.7"
 
 [dev-dependencies]
 lazy_static = "1.4.0"
-serial_test = "0.7.0"
+serial_test = "3.2.0"

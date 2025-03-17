@@ -1,59 +1,87 @@
+use std::fmt;
+
+use crate::models::{IdAndSerialId, ShortLink};
 use crate::{
-    b62encode,
-    models::{LongURL, NewShortLink, ShortLink},
-    PConn,
+    database::schema::short_links,
+    models::{LongURL, NewShortLink},
 };
-use diesel::{insert_into, prelude::*, result::Error};
+use crate::{errors, prelude::*};
+use diesel::{insert_into, prelude::*, update};
 use uuid::Uuid;
+
+enum Status {
+    Active,
+    Inactive,
+    Expired,
+}
+
+impl fmt::Display for Status {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "{}",
+            match self {
+                Status::Active => "active",
+                Status::Inactive => "inactive",
+                Status::Expired => "expired",
+            }
+        )
+    }
+}
 
 pub struct ShortLinkService;
 
 impl ShortLinkService {
-    pub fn create(conn: &PConn, values: LongURL, user_session: String) -> Option<String> {
-        use crate::database::schema::short_link;
-        use crate::database::schema::users;
-        let user_id = users::dsl::users
-            .select(users::dsl::id)
-            .filter(users::dsl::email.eq(user_session))
-            .limit(1)
-            .first(conn)
-            .unwrap();
-        let last_item = short_link::dsl::short_link
-            .select(short_link::dsl::uid)
-            .order(short_link::dsl::uid.desc())
-            .limit(1)
-            .first(conn)
-            .unwrap_or(1);
-        let short_code =
-            b62encode(last_item as usize + (chrono::offset::Local::now().timestamp() as usize))
-                .unwrap();
+    pub fn create(
+        conn: &mut PConn,
+        values: LongURL,
+        user_id: Uuid,
+    ) -> Result<ShortLink, errors::ShortLinkError> {
         let input = NewShortLink {
             long_url: values.url,
             owner_id: user_id,
-            hash: short_code,
+            is_private: true,
+            status: Status::Inactive.to_string(),
+            title: values.title,
+            description: values.description,
         };
-        let insert = insert_into(short_link::dsl::short_link)
-            .values(input)
-            .get_result::<ShortLink>(conn);
 
-        insert.map_or(None, |x: ShortLink| Some(x.hash))
+        let data: IdAndSerialId = insert_into(short_links::table)
+            .values(input)
+            .returning(IdAndSerialId::as_returning())
+            .get_result(conn)?;
+
+        let hashed_url =
+            b62encode(data.serial_id as usize + chrono::offset::Local::now().timestamp() as usize)
+                .unwrap();
+
+        let result: ShortLink = update(short_links::table.find(data.id))
+            .set(short_links::hash.eq(hashed_url))
+            .returning(ShortLink::as_returning())
+            .get_result(conn)?;
+
+        Ok(result)
     }
 
-    pub fn get(conn: &PConn, code: String) -> Option<String> {
-        use crate::database::schema::short_link;
-        let result = short_link::dsl::short_link
-            .select(short_link::dsl::long_url)
-            .filter(short_link::dsl::hash.eq(code))
+    pub fn get(conn: &mut PConn, code: String) -> Option<String> {
+        use crate::database::schema::short_links;
+        let result = short_links::dsl::short_links
+            .select(short_links::dsl::long_url)
+            .filter(short_links::dsl::hash.eq(code))
             .limit(1)
             .first(conn);
         result.ok()
     }
 
-    pub fn get_all(conn: &PConn, user_id: Uuid) -> Result<Vec<ShortLink>, Error> {
-        use crate::database::schema::short_link;
-        let result = short_link::dsl::short_link
-            .filter(short_link::dsl::owner_id.eq(user_id))
-            .get_results(conn);
-        result
+    pub fn get_all(
+        conn: &mut PConn,
+        user_id: Uuid,
+    ) -> Result<Vec<ShortLink>, errors::ShortLinkError> {
+        use crate::database::schema::short_links;
+        let result = short_links::dsl::short_links
+            .filter(short_links::dsl::owner_id.eq(user_id))
+            .get_results(conn)?;
+
+        Ok(result)
     }
 }

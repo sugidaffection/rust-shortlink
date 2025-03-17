@@ -1,11 +1,11 @@
+use crate::{database::schema::users, prelude::*};
 use diesel::{insert_into, prelude::*};
-use secrecy::Secret;
+use secrecy::SecretString;
 
 use crate::{
     errors,
     forms::{LoginForm, RegisterForm},
-    models::{AuthUser, NewUser, User},
-    verify_password, PConn,
+    models::{AuthUser, NewUser},
 };
 
 use super::user::UserService;
@@ -13,48 +13,41 @@ use super::user::UserService;
 pub struct AuthService;
 
 impl AuthService {
-    pub fn login(conn: &PConn, form: LoginForm) -> Result<AuthUser, errors::AuthError> {
-        let result = UserService::get_one_by_email(conn, form.email).map_or(None, |x| Some(x));
-
-        if let Some(user) = result {
-            if verify_password(form.password, Secret::from(user.password_hash)).unwrap() {
-                return Result::Ok(AuthUser { email: user.email });
+    pub fn login(conn: &mut PConn, form: LoginForm) -> Result<AuthUser, errors::SignInError> {
+        if let Some(user) = UserService::get_one_by_email(conn, form.email).ok() {
+            if verify_password(form.password, SecretString::from(user.password_hash))
+                .unwrap_or(false)
+            {
+                return Ok(AuthUser { id: user.id });
             }
         }
 
-        return Result::Err(errors::AuthError::new(
-            "Invalid username or password".to_owned(),
-            "auth/invalid".to_owned(),
-        ));
+        Err(errors::SignInError::InvalidCredentials)
     }
 
-    pub fn register(conn: &PConn, form: RegisterForm) -> Result<AuthUser, errors::AuthError> {
-        use crate::database::schema::users::dsl::*;
+    pub fn register(conn: &mut PConn, form: RegisterForm) -> Result<AuthUser, errors::SignUpError> {
+        let result = UserService::get_one_by_email(conn, form.email.clone()).ok();
 
-        let result = UserService::get_one_by_email(&conn, form.email.clone());
-
-        if let Some(user) = result.ok() {
-            return Result::Err(errors::AuthError::new(
-                "Email already used.".to_owned(),
-                "auth/duplicate_email".to_owned(),
-            ));
+        if let Some(_) = result {
+            return Result::Err(errors::SignUpError::DuplicateEmail);
         }
 
-        let new_user = NewUser::from(form);
-        let inserted_user = insert_into(users).values(new_user).get_result::<User>(conn);
+        let password_hash =
+            hash_password(form.password).ok_or_else(|| errors::SignUpError::HashingFailed)?;
 
-        match inserted_user {
-            Ok(user) => {
-                let result = AuthUser { email: user.email };
+        let new_user = NewUser {
+            username: form.username,
+            email: form.email,
+            password_hash,
+        };
 
-                return Result::Ok(result);
-            }
-            Err(_) => {
-                return Result::Err(errors::AuthError::new(
-                    "Failed to register new user".to_owned(),
-                    "auth/request_error".to_owned(),
-                ))
-            }
-        }
+        let inserted_user = insert_into(users::table)
+            .values(new_user)
+            .returning(users::id)
+            .get_result::<uuid::Uuid>(conn)
+            .map(|value| AuthUser { id: value })
+            .map_err(|_| errors::SignUpError::RegistrationFailed);
+
+        inserted_user
     }
 }

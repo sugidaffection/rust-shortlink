@@ -1,7 +1,7 @@
 #[cfg(test)]
 mod b62_tests {
 
-    use shortlink::{b62decode, b62encode};
+    use shortlink::prelude::*;
 
     #[test]
     fn test_base62() {

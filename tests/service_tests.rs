@@ -5,22 +5,19 @@ mod service_tests {
     use lazy_static::lazy_static;
     use serial_test::serial;
     use shortlink::{
-        create_pool,
         forms::{LoginForm, RegisterForm},
-        hash_password,
         models::{NewUser, User},
-        PConn, Pool,
+        prelude::*,
     };
 
     lazy_static! {
-        static ref POOL: Pool = {
-            dotenv::dotenv().ok();
+        static ref POOL: DbPool = {
+            dotenvy::dotenv().ok();
             create_pool(None)
         };
         static ref EMAIL: String = String::from("test_email@mail.com");
         static ref USERNAME: String = String::from("test_email@mail.com");
-        static ref PASSWORD: secrecy::Secret<String> =
-            secrecy::Secret::new(String::from("test123"));
+        static ref PASSWORD: secrecy::SecretString = secrecy::SecretString::new("test123".into());
         static ref NEW_USER: NewUser = NewUser {
             email: EMAIL.to_owned(),
             username: USERNAME.to_owned(),
@@ -43,12 +40,12 @@ mod service_tests {
         pool.get().ok().expect("Pool Connection doesnt exists")
     }
 
-    fn _create_email(conn: &PConn) -> Result<User, diesel::result::Error> {
+    fn _create_email(conn: &mut PConn) -> Result<User, diesel::result::Error> {
         use shortlink::database::schema::users::dsl::users;
         insert_into(users).values(NEW_USER.clone()).get_result(conn)
     }
 
-    fn _delete_email(conn: &PConn) -> Result<bool, diesel::result::Error> {
+    fn _delete_email(conn: &mut PConn) -> Result<bool, diesel::result::Error> {
         use shortlink::database::schema::users::dsl::{email, users};
         delete(users.filter(email.eq(EMAIL.to_owned())))
             .execute(conn)
@@ -64,7 +61,7 @@ mod service_tests {
         #[test]
         #[super::serial(auth)]
         fn register_test() {
-            let conn = &super::_get_conn();
+            let conn = &mut super::_get_conn();
             let register_form = super::REGISTER_FORM.clone();
 
             let result = AuthService::register(conn, register_form);
@@ -77,7 +74,7 @@ mod service_tests {
         #[test]
         #[super::serial(auth)]
         fn login_test() {
-            let conn = &super::_get_conn();
+            let conn = &mut super::_get_conn();
             let login_form = super::LOGIN_FORM.clone();
             let _new = _create_email(conn);
             let result = AuthService::login(conn, login_form);
@@ -96,7 +93,7 @@ mod service_tests {
         #[test]
         #[super::serial(user)]
         fn get_by_email_test() {
-            let conn = &super::_get_conn();
+            let conn = &mut super::_get_conn();
             let _new = _create_email(conn);
             let result = UserService::get_one_by_email(conn, "test_email@mail.com".to_owned());
             assert!(result.ok().is_some());
@@ -106,7 +103,7 @@ mod service_tests {
         #[test]
         #[super::serial(user)]
         fn delete_by_email_test() {
-            let conn = &super::_get_conn();
+            let conn = &mut super::_get_conn();
             let _new = _create_email(conn);
             let result = UserService::delete_by_email(conn, "test_email@mail.com".to_owned());
 

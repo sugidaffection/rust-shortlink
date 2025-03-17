@@ -2,9 +2,9 @@
 
 ![workflow](https://github.com/sugidaffection/rust-shortlink/actions/workflows/rust.yml/badge.svg)
 
-|![screenshot](screenshots/screenshot1.png)|
-|-|
-|![screenshot](screenshots/screenshot.png)|
+| ![screenshot](screenshots/screenshot1.png) |
+| ------------------------------------------ |
+| ![screenshot](screenshots/screenshot.png)  |
 
 ## Table of Contents
 
@@ -28,20 +28,31 @@ postgresql ^=14
 rust ^=1.58
 ```
 
+Additionally, if you are using a Linux-based system, you need to install libpq-dev for PostgreSQL support:
+
+```
+sudo apt update
+sudo apt install libpq-dev
+```
+
 ### Installing
 
 type this command in terminal:
+
 ```
 ./build.sh
 ```
 
 ### Run Server
-First thing to do is: 
+
+First thing to do is:
+
 ```
 setup .env file
 ```
 
 then type this command in terminal:
+
 ```
 cargo run --release
 ```

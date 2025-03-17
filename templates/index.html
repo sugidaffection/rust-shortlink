@@ -1,49 +1,57 @@
-{% extends "components/_base.html" %}
-
-{% block content %}
+{% extends "components/_base.html" %} {% block content %}
 
 <div class="row text-center">
-    <div class="col">
-        <h1>Create Short Links!</h1>
-        <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Ea, est.</p>
-    </div>
+  <div class="col">
+    <h1>Create Short Links!</h1>
+    <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Ea, est.</p>
+  </div>
 </div>
 <div class="row justify-content-center">
-    <div class="col-md-6">
-        {% if user %}
-        <form method="post" class="px-2 py-3 d-flex justify-content-center">
-            <div class="me-2">
-                <input name="url" type="url" class="form-control" placeholder="Enter your long URL" required>
-            </div>
-            <button type="submit" class="btn btn-primary btn-sm">Generate URL</button>
-        </form>
-        {% else %}
-        Please login first
-        <a href="/auth/login" class="btn btn-primary">Login</a>
-        {% endif %}
-    </div>
+  <div class="col-md-6">
+    {% if is_logged_in %} {% if error %}
+    <div class="alert alert-danger" role="alert">{{error}}</div>
+    {% endif %}
+    <form method="post" class="px-2 py-3 d-flex justify-content-center">
+      <div class="me-2">
+        <input
+          name="url"
+          type="url"
+          class="form-control"
+          placeholder="Enter your long URL"
+          required
+        />
+      </div>
+      <button type="submit" class="btn btn-primary btn-sm">Generate URL</button>
+    </form>
+    {% else %} Please login first
+    <a href="/auth/login" class="btn btn-primary">Login</a>
+    {% endif %}
+  </div>
 </div>
-{% if code %}
+{% if url %}
 <div class="row justify-content-center mt-4">
-    <div class="col-md-6 d-flex">
-        <div class="card flex-grow-1 rounded-0 border-end-0 rounded-start">
-            <div class="card-body">
-                <a href="{{url}}{{code}}" id="result">
-                    {{url}}{{code}}
-                </a>
-            </div>
-        </div>
-        <button type="button" class="btn btn-primary rounded-0 rounded-end" onclick="copyToClipboard()">Copy</button>
+  <div class="col-md-6 d-flex">
+    <div class="card flex-grow-1 rounded-0 border-end-0 rounded-start">
+      <div class="card-body">
+        <a href="{{url}}" id="result"> {{url}} </a>
+      </div>
     </div>
+    <button
+      type="button"
+      class="btn btn-primary rounded-0 rounded-end"
+      onclick="copyToClipboard()"
+    >
+      Copy
+    </button>
+  </div>
 </div>
-
 
 <script>
-    function copyToClipboard() {
-        let href = document.querySelector('#result').href;
-        navigator.clipboard.writeText(href);
+  function copyToClipboard() {
+    let href = document.querySelector("#result").href;
+    navigator.clipboard.writeText(href);
 
-        let el = `<div aria-live="polite" aria-atomic="true" class="bg-dark position-relative bd-example-toasts">
+    let el = `<div aria-live="polite" aria-atomic="true" class="bg-dark position-relative bd-example-toasts">
             <div class="toast-container position-absolute top-50 start-50 translate-middle-x p-3" id="toastPlacement">
             <div class="toast">
               <div class="toast-header">
@@ -57,22 +65,19 @@
           </div>
         </div>`;
 
-        document.body.insertAdjacentHTML('beforeend', el)
+    document.body.insertAdjacentHTML("beforeend", el);
 
-        var toastEl = document.querySelector('.toast')
-        var toast = new bootstrap.Toast(toastEl)
+    var toastEl = document.querySelector(".toast");
+    var toast = new bootstrap.Toast(toastEl);
 
+    if (toast) {
+      toast.show();
 
-        if (toast) {
-            toast.show();
-
-            toastEl.addEventListener('hidden.bs.toast', () => {
-                toast.dispose();
-                toastEl.remove();
-            })
-        }
+      toastEl.addEventListener("hidden.bs.toast", () => {
+        toast.dispose();
+        toastEl.remove();
+      });
     }
+  }
 </script>
-{% endif %}
-
-{% endblock content %}
+{% endif %} {% endblock content %}
