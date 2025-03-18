@@ -9,7 +9,8 @@ CREATE TABLE users (
 
 CREATE TABLE short_links (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    owner_id UUID NOT NULL,
+    owner_id UUID,
+    anonymous_owner_id UUID,
     serial_id BIGINT GENERATED ALWAYS AS IDENTITY UNIQUE,
     hash VARCHAR UNIQUE,
     long_url TEXT NOT NULL,

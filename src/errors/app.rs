@@ -10,4 +10,7 @@ pub enum AppError {
 
     #[error("Failed to start HTTP server: {0}")]
     ServerError(#[from] std::io::Error),
+
+    #[error("Failed to bind to server: {0}")]
+    BindError(String),
 }

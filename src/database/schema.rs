@@ -15,7 +15,8 @@ diesel::table! {
 diesel::table! {
     short_links (id) {
         id -> Uuid,
-        owner_id -> Uuid,
+        owner_id -> Nullable<Uuid>,
+        anonymous_owner_id -> Nullable<Uuid>,
         serial_id -> Int8,
         hash -> Nullable<Varchar>,
         long_url -> Text,

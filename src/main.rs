@@ -1,39 +1,46 @@
-use actix_session::{storage, SessionMiddleware};
-use actix_web::{cookie, middleware, web, App, HttpServer};
+#[cfg(any(feature = "ssr", feature = "backend"))]
+use shortlink::errors::AppError;
 
-use dotenvy::dotenv;
-use shortlink::{auth, errors::AppError, home, prelude::*, users};
-use std::env;
-
-use diesel_migrations::{embed_migrations, EmbeddedMigrations, MigrationHarness};
-pub const MIGRATIONS: EmbeddedMigrations = embed_migrations!("./migrations");
-
-async fn run_db_migrations() -> Result<(), AppError> {
-    let pool = create_pool(None);
-    let mut conn = pool
-        .get()
-        .map_err(|err| AppError::MigrationError(err.to_string()))?;
-
-    conn.run_pending_migrations(MIGRATIONS)
-        .map_err(|err| AppError::MigrationError(err.to_string()))?;
-
-    Ok(())
-}
-
+#[cfg(feature = "ssr")]
 #[actix_web::main]
 async fn main() -> Result<(), AppError> {
+    use actix_files::Files;
+    use actix_session::{storage, SessionMiddleware};
+    use actix_web::*;
+    use dotenvy::dotenv;
+    use leptos::config::get_configuration;
+    use leptos::prelude::*;
+    use leptos_actix::{generate_route_list, LeptosRoutes};
+    use leptos_meta::MetaTags;
+    use shortlink::app::App;
+    use shortlink::database::run_db_migrations;
+    use shortlink::{api, prelude::*};
+    use std::env;
+
     dotenv().map_err(AppError::EnvLoadError)?;
+
+    let conf = get_configuration(None).unwrap();
+    let addr = conf.leptos_options.site_addr;
 
     run_db_migrations().await?;
 
-    HttpServer::new(|| {
-        let key = env::var("SECRET_KEY").map_or_else(
-            |_| cookie::Key::generate(),
-            |x| cookie::Key::from(x.as_bytes()),
+    let db_pool = create_pool(None);
+
+    println!("listening on http://{}", &addr);
+
+    HttpServer::new(move || {
+        let key = cookie::Key::from(
+            env::var("SECRET_KEY")
+                .expect("SECRET_KEY must be set")
+                .as_bytes(),
         );
 
+        let routes = generate_route_list(App);
+        let leptos_options = &conf.leptos_options;
+        let site_root = leptos_options.site_root.clone().to_string();
+
         App::new()
-            .app_data(web::Data::new(AppData::new(None)))
+            .app_data(web::Data::new(db_pool.clone()))
             .wrap(middleware::Compress::default())
             .wrap(middleware::NormalizePath::trim())
             .wrap(
@@ -43,11 +50,116 @@ async fn main() -> Result<(), AppError> {
                     .cookie_secure(true)
                     .build(),
             )
-            .configure(home::routes::routes_config)
-            .configure(users::routes::routes_config)
-            .configure(auth::routes::routes_config)
+            .configure(api::routes::routes_config)
+            .service(Files::new("/pkg", format!("{site_root}/pkg")))
+            .service(Files::new("/assets", &site_root))
+            .leptos_routes_with_context(routes, {
+                let db_pool = db_pool.clone();
+                move || {
+                    provide_context(db_pool.clone());
+                }
+            }, 
+            {
+                let leptos_options = leptos_options.clone();
+                move || {
+                    view! {
+                        <!DOCTYPE html>
+                        <html lang="en" data-theme="business">
+                            <head>
+                                <meta charset="utf-8"/>
+                                <meta name="viewport" content="width=device-width, initial-scale=1"/>
+                                <AutoReload options=leptos_options.clone() />
+                                <HydrationScripts options=leptos_options.clone()/>
+                                <MetaTags/>
+                            </head>
+                            <body>
+                                <App/>
+                            </body>
+                        </html>
+                    }
+                }
+            })
+            .app_data(web::Data::new(leptos_options.to_owned()))
     })
-    .bind(("0.0.0.0", 8080))?
+    .bind(&addr)
+    .map_err(|e| {
+        eprintln!("Failed to bind to {}: {}", addr, e);
+        AppError::BindError(e.to_string()) // Define `BindError`
+    })?
+    .run()
+    .await?;
+
+    Ok(())
+}
+
+#[cfg(feature = "hydrate")]
+pub fn main() {
+    use leptos::mount::hydrate_body;
+    use shortlink::app::App;
+
+    console_error_panic_hook::set_once();
+
+    hydrate_body(App);
+}
+
+#[cfg(all(not(feature = "ssr"), feature = "csr"))]
+pub fn main() {
+    // a client-side main function is required for using `trunk serve`
+    // prefer using `cargo leptos serve` instead
+    // to run: `trunk serve --open --features csr`
+    use leptos::prelude::mount_to_body;
+    use shortlink::app::App;
+
+    console_error_panic_hook::set_once();
+
+    mount_to_body(App);
+}
+
+#[cfg(feature = "backend")]
+#[actix_web::main]
+async fn main() -> Result<(), AppError> {
+    use actix_session::{storage, SessionMiddleware};
+    use actix_web::*;
+    use dotenvy::dotenv;
+    use shortlink::database::run_db_migrations;
+    use shortlink::{api, prelude::*};
+    use std::env;
+
+    dotenv().map_err(AppError::EnvLoadError)?;
+
+    run_db_migrations().await?;
+
+    let db_pool = create_pool(None);
+
+    let addr = "localhost:3000";
+
+    println!("listening on http://{}", &addr);
+
+    HttpServer::new(move || {
+        let key = cookie::Key::from(
+            env::var("SECRET_KEY")
+                .expect("SECRET_KEY must be set")
+                .as_bytes(),
+        );
+
+        App::new()
+            .app_data(web::Data::new(db_pool.clone()))
+            .wrap(middleware::Compress::default())
+            .wrap(middleware::NormalizePath::trim())
+            .wrap(
+                SessionMiddleware::builder(storage::CookieSessionStore::default(), key.clone())
+                    .cookie_http_only(true)
+                    .cookie_same_site(cookie::SameSite::Strict)
+                    .cookie_secure(true)
+                    .build(),
+            )
+            .configure(api::routes::routes_config)
+    })
+    .bind(&addr)
+    .map_err(|e| {
+        eprintln!("Failed to bind to {}: {}", addr, e);
+        AppError::BindError(e.to_string()) // Define `BindError`
+    })?
     .run()
     .await?;
 
