@@ -1,2 +1,0 @@
-ALTER TABLE IF EXISTS short_link
-ADD COLUMN uid SERIAL;

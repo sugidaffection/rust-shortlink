@@ -1,2 +1,0 @@
-ALTER TABLE IF EXISTS short_link
-DROP COLUMN uid;

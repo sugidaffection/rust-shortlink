@@ -1,3 +1,3 @@
-mod auth;
+mod app;
 
-pub use auth::*;
+pub use app::AppError;

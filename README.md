@@ -2,9 +2,7 @@
 
 ![workflow](https://github.com/sugidaffection/rust-shortlink/actions/workflows/rust.yml/badge.svg)
 
-|![screenshot](screenshots/screenshot1.png)|
-|-|
-|![screenshot](screenshots/screenshot.png)|
+![screenshot](screenshots/home.png)
 
 ## Table of Contents
 
@@ -21,27 +19,55 @@ These instructions will get you a copy of the project up and running on your loc
 
 ### Prerequisites
 
-What things you need to install the software and how to install them.
+What things you need to install the software and how to install them:
 
 ```
 postgresql ^=14
 rust ^=1.58
+cargo-leptos
+```
+
+Additionally, if you are using a Linux-based system, you need to install libpq-dev for PostgreSQL support:
+
+```
+sudo apt update
+sudo apt install libpq-dev
+```
+
+Install cargo-leptos:
+
+```
+cargo install cargo-leptos
 ```
 
 ### Installing
 
-type this command in terminal:
+Clone the repository and install dependencies:
+
 ```
-./build.sh
+git clone <repository-url>
+cd rust-shortlink
 ```
 
 ### Run Server
-First thing to do is: 
+
+First, setup your environment:
+
 ```
-setup .env file
+cp .env.example .env
+# Edit .env with your database settings
 ```
 
-then type this command in terminal:
+For development with hot-reload:
+
 ```
-cargo run --release
+cargo leptos watch
 ```
+
+For production build:
+
+```
+cargo leptos build --release
+```
+
+The server will start at `http://localhost:3000` by default.
