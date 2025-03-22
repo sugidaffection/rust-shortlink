@@ -1,4 +1,7 @@
 {
+  "engines": {
+    "node": ">=20"
+  },
   "scripts": {
     "build": "npx tailwindcss -i style/input.css -o style/output.css",
     "watch": "bun run build --watch"
