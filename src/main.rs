@@ -92,14 +92,24 @@ async fn main() -> Result<(), AppError> {
     Ok(())
 }
 
-#[cfg(feature = "hydrate")]
+#[cfg(feature = "ssr")]
+#[actix_web::get("favicon.ico")]
+async fn favicon(
+    leptos_options: actix_web::web::Data<leptos::config::LeptosOptions>,
+) -> actix_web::Result<actix_files::NamedFile> {
+    let leptos_options = leptos_options.into_inner();
+    let site_root = &leptos_options.site_root;
+    Ok(actix_files::NamedFile::open(format!(
+        "{site_root}/favicon.ico"
+    ))?)
+}
+
+#[cfg(not(any(feature = "ssr", feature = "csr", feature = "backend")))]
 pub fn main() {
-    use leptos::mount::hydrate_body;
-    use shortlink::app::App;
-
-    console_error_panic_hook::set_once();
-
-    hydrate_body(App);
+    // no client-side main function
+    // unless we want this to work with e.g., Trunk for pure client-side testing
+    // see lib.rs for hydration function instead
+    // see optional feature `csr` instead
 }
 
 #[cfg(all(not(feature = "ssr"), feature = "csr"))]

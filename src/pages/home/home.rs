@@ -62,6 +62,7 @@ pub fn home_page() -> impl IntoView {
 
 #[component]
 fn display_result(result: Option<String>) -> impl IntoView {
+    #[cfg(any(feature = "csr", feature = "hydrate"))]
     let result_for_copy = result.clone();
     let handle_copy = move |ev: MouseEvent| {
         ev.prevent_default();
