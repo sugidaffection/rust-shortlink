@@ -1,8 +1,5 @@
 use crate::{
-    components::{
-        guard::{AuthGuard, RedirectGuard},
-        navbar::Navbar,
-    },
+    components::{guard::RedirectGuard, navbar::Navbar},
     functions::auth::ValidateUserSession,
     pages::{
         auth::{login::LoginPage, register::RegisterPage},
@@ -37,13 +34,13 @@ pub fn app() -> impl IntoView {
     #[cfg(any(feature = "csr", feature = "hydrate"))]
     if let Some(document) = window().and_then(|win| win.document()) {
         if let Some(html) = document.document_element() {
-            html.set_attribute("data-theme", default_theme);
+            let _ = html.set_attribute("data-theme", default_theme);
         }
     }
 
     let check_session_action = ServerAction::<ValidateUserSession>::new();
 
-    let is_signed_in = Memo::new(move |v| match check_session_action.value().get() {
+    let is_signed_in = Memo::new(move |_| match check_session_action.value().get() {
         Some(Ok(_)) => true,
         _ => false,
     });
@@ -112,12 +109,12 @@ fn NotFound() -> impl IntoView {
 
     view! {
         <div class="flex flex-col flex-grow justify-center items-center text-center">
-        <h1 class="text-9xl font-bold text-primary">404</h1>
-        <h2 class="text-3xl font-semibold mt-4">Page Not Found</h2>
+        <h1 class="text-9xl font-bold text-primary">"404"</h1>
+        <h2 class="text-3xl font-semibold mt-4">"Page Not Found"</h2>
         <p class="text-lg text-gray-500 mt-2">
-            The page you are looking for does not exist or has been moved.
+            "The page you are looking for does not exist or has been moved."
         </p>
-        <a href="/" class="btn btn-primary mt-6">Go Home</a>
+        <a href="/" class="btn btn-primary mt-6">"Go Home"</a>
         </div>
     }
 }
