@@ -121,7 +121,7 @@ reload-port = 3001
 #  The browserlist query used for optimizing the CSS.
 browserquery = "defaults"
 # The environment Leptos will run in, usually either "DEV" or "PROD"
-env = "DEV"
+env = "PROD"
 
 # The features to use when compiling the bin target
 #
